@@ -2,7 +2,7 @@ import os
 import fitz  
 import re
 import requests
-import configparser
+import json
 
 list = []
 
@@ -11,23 +11,29 @@ def initial_check():
     if not os.path.exists(r"PDFs\B"):
         print("Required libraries were not found. Downloading..")
     # PDF (Θεματα) Version Check
-    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/Program/config.json"
+    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/Program/config.ini"
     response = requests.get(git_config_file)
+    response_data = response.json()
+    local_json = None
+    online_json = None
     if response.status_code == 200: # 200: OK
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        remote_config = configparser.ConfigParser()
-        remote_config.read_string(response.text)
-        local_ver = config['ALL']['pdf_version']
-        remote_ver = remote_config['ALL']['pdf_version']
-        if local_ver != remote_ver:
-            user_response = input("PDFs are out of date! Update? (new: " + remote_ver + ", old: " + local_ver + ") (y/n): ").lower()
+        with open('config.json') as f:
+            local_json = json.load(f)
+        with open(response_data) as j:
+            online_json = json.load(j)
+        print(local_json, online_json)
+        if local_json != online_json:
+            user_response = input("PDFs are out of date! Update? (y/n)").lower()
             if user_response == "y":
                 print("Downloading new PDFs..")
             else:
-                print("Skipped update. Using older version: "+local_ver)
+                print("Skipped update. Using older version: ")
+        else:
+            print("PDFs up to date!")
+    else:
+        print("Failed to get response from remote server: "+str(response.status_code))
 
-
+initial_check()
 
 def normalize_text(text):
     text = re.sub(r'\s+', ' ', text)  
