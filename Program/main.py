@@ -1,37 +1,60 @@
 import os
-import fitz  
+import fitz
 import re
 import requests
 import json
+import urllib
 
 list = []
+
+
+def download_pdf():
+    drive_pdf_link = "https://drive.google.com/drive/folders/19HQd-G7Iat0jhmIIv9KSazv6mdHt_ZdW?usp=sharing"
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    pdfs_dir = os.path.join(current_dir, '..', '..')
+    if os.path.exists(f"{pdfs_dir}/PDFs"):
+        print("Deleting old libraries..")
+        os.rmdir(f"{pdfs_dir}/PDFs")
+        
+    output = os.path.join(pdfs_dir, 'PDFs')
+    
+    try:
+        response = requests.get(drive_pdf_link, stream=True)
+        response.raise_for_status()
+        with open(output, 'wb') as file:
+            for chunk in response.iter_content(chunk_size=8192):
+                file.write(chunk)
+
+        print("New library has finished downloading..")
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to download libraries: {e}")
+
 
 def initial_check():
     # Ελέγχει αν τα θεματα υπαρχουν
     if not os.path.exists(r"PDFs\B"):
         print("Required libraries were not found. Downloading..")
     # PDF (Θεματα) Version Check
-    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/Program/config.ini"
-    response = requests.get(git_config_file)
-    response_data = response.json()
-    local_json = None
-    online_json = None
-    if response.status_code == 200: # 200: OK
-        with open('config.json') as f:
+    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/Program/config.json"
+    try:
+        response = requests.get(git_config_file, stream=True).json()
+        local_json = None
+        with open(r'Program\config.json') as f:
             local_json = json.load(f)
-        with open(response_data) as j:
-            online_json = json.load(j)
+            print(local_json)
+        online_json = response
         print(local_json, online_json)
         if local_json != online_json:
-            user_response = input("PDFs are out of date! Update? (y/n)").lower()
+            user_response = input("Libraries are out of date! Update? (y/n)").lower()
             if user_response == "y":
-                print("Downloading new PDFs..")
+                print("Downloading new libraries..")
+                download_pdf()
             else:
                 print("Skipped update. Using older version: ")
         else:
             print("PDFs up to date!")
-    else:
-        print("Failed to get response from remote server: "+str(response.status_code))
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to check for updates: {e}")
 
 initial_check()
 
