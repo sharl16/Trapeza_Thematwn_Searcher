@@ -35,11 +35,11 @@ def initial_check():
     if not os.path.exists(r"PDFs\B"):
         print("Required libraries were not found. Downloading..")
     # PDF (Θεματα) Version Check
-    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/Program/config.json"
+    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/PDFs/version.json"
     try:
         response = requests.get(git_config_file, stream=True).json()
         local_json = None
-        with open(r'Program\config.json') as f:
+        with open(r'PDF\version.json') as f:
             local_json = json.load(f)
             print(local_json)
         online_json = response
