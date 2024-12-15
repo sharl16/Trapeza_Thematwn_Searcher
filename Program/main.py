@@ -7,8 +7,31 @@ import shutil
 import zipfile
 from clint.textui import progress
 
-list = []
+results = []
 
+def main():
+    subject = input('Επιλογή μαθήματος: (ΦΥΣΙΚΗ ΘΕΤΙΚΗ/ ΜΑΘΗΜΑΤΙΚΑ ΘΕΤΙΚΗ/ ΑΛΓΕΒΡΑ/ ΓΛΩΣΣΑ)')
+    print("Επιλέχθηκε: "+subject)
+    segment = input('Επιλογή εκφώνησης')
+
+    if subject == 'ΦΥΣΙΚΗ ΘΕΤΙΚΗ':
+        index_frontend(r'PDFs\B\Fysikh', segment)
+    elif subject == "ΜΑΘΗΜΑΤΙΚΑ ΘΕΤΙΚΗ":
+        index_frontend(r'PDFs\B\Math_Kateuth', segment)
+    elif subject == "ΑΛΓΕΒΡΑ":
+        index_frontend(r'PDFs\B\Algebra', segment)
+    elif subject == "ΓΛΩΣΣΑ":
+        index_frontend(r'PDFs\B\Glwssa', segment)
+    else:
+        print("Δεν υπάρχει το μάθημα: "+subject)
+
+    if results == []:
+        print("Δεν βρέθηκαν αποτελέσματα.")
+    else:
+        print(results)
+
+    input('Press any key to close..')
+    quit()
 
 def download_pdf():
     drive_pdf_link = "https://drive.usercontent.google.com/download?id=1i9G7jwnOA66tgBqc54f-cRh7t4Yvmhqh&export=download&authuser=0&confirm=t&uuid=04e9c882-615b-4eb0-859e-34423d71a931&at=APvzH3qY6_v6jfnozoMeH-hNYr0e%3A1734253857478"
@@ -18,7 +41,7 @@ def download_pdf():
     output = os.path.join(r"PDFs")
     
     try:
-        print("Downloading new PDFs..")
+        print("Λήψη θεμάτων..")
         response = requests.get(drive_pdf_link, stream=True, timeout=(10, 30))
         response.raise_for_status()
         with open(output, 'wb') as file:
@@ -26,41 +49,46 @@ def download_pdf():
             for chunk in progress.bar(response.iter_content(chunk_size=16384), expected_size=(total_length/16384) + 1):
                 file.write(chunk)
 
-        print("Extracting PDFs.zip..")
-        with zipfile.ZipFile(r"PDFs", 'r') as zip_ref:
+        print("Εγκατάσταση..")
+        os.rename(r"PDFs", r"TempPDF")
+        with zipfile.ZipFile(r"TempPDF", 'r') as zip_ref:
             zip_ref.extractall()
-        os.remove(r"PDFs")
+        os.remove(r"TempPDF")
+        main()
                 
     except requests.exceptions.RequestException as e:
-        print(f"Failed to download libraries: {e}")
-
-
+        input(f"Failed to download libraries: {e}")
+        quit()
+        
 def initial_check():
     # Ελέγχει αν τα θεματα υπαρχουν
-    if not os.path.exists(r"B"):
-        print("Required libraries were not found. Downloading..")
+    if not os.path.exists(r"PDFs"):
+        print("Δεν υπάρχουν εγκατεστημένα θέματα σε αυτόν τον υπολογιστή.")
+        download_pdf()
     # PDF (Θεματα) Version Check
-    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/version.json"
-    print("Verifying with server..")
+    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/B/version.json"
+    print("Έλεγχος για ενημερώσεις..")
     try:
         session = requests.session()
-        response = session.get(git_config_file, stream=True, timeout=(10, 30)).json()
+        response = session.get(git_config_file, stream=True, timeout=(5, 10)).json()
         local_json = None
-        with open(r'version.json') as f:
+        with open(r'PDFs\version.json') as f:
             local_json = json.load(f)
         online_json = response
         print(local_json, online_json)
         if local_json != online_json:
-            user_response = input("Libraries are out of date! Update? (y/n)").lower()
+            user_response = input("Τα θέματα είναι ξεπερασμένα! Ενημέρωση θεμάτων; (y/n)").lower()
             if user_response == "y":
-                print("Downloading new libraries..")
                 download_pdf()
             else:
-                print("Skipped update. Using older version: ")
+                print(f"Παράβλεψη ενημέρωσης: {local_json}")
+                main()
         else:
-            print("PDFs up to date!")
+            print("Τα θέματα είναι ενημερωμένα!")
+            main()
     except requests.exceptions.RequestException as e:
-        print(f"Failed to check for updates: {e}")
+        input(f"Απέτυχε ο έλεγχος γία ενημερώσεις: {e}, παράβλεψη ενημέρωσης..")
+        main()
 
 def normalize_text(text):
     text = re.sub(r'\s+', ' ', text)  
@@ -68,7 +96,7 @@ def normalize_text(text):
     return text
 
 def index_in_pdf(file_path, filename, word_to_find):
-    print(f"Searching in: {filename}")
+    print(f"Θέμα: {filename}", end='\r', flush=True)
     with fitz.open(file_path) as pdf_document:
                 for page_num in range(pdf_document.page_count):
                     page = pdf_document.load_page(page_num)  
@@ -77,7 +105,7 @@ def index_in_pdf(file_path, filename, word_to_find):
                     if text:
                         normalized_text = normalize_text(text.lower())
                         if word_to_find in normalized_text:
-                            list.insert(len(filename), filename)
+                            results.insert(len(filename), filename)
                             break
 
 def index_frontend(folder_path, word_to_find):
@@ -86,28 +114,7 @@ def index_frontend(folder_path, word_to_find):
     for filename in os.listdir(folder_path):
         if filename.endswith('.pdf'):
             file_path = os.path.join(folder_path, filename)
-            index_in_pdf(file_path, filename, word_to_find) \
+            index_in_pdf(file_path, filename, word_to_find) 
 
 initial_check()
-
-subject = input('Επιλογή Μαθήματος (ΦΥΣΙΚΗ ΘΕΤΙΚΗ/ ΜΑΘΗΜΑΤΙΚΑ ΘΕΤΙΚΗ/ ΑΛΓΕΒΡΑ/ ΓΛΩΣΣΑ)')
-print("Επιλέχθηκε: "+subject)
-segment = input('Επιλογή εκφώνησης')
-
-if subject == 'ΦΥΣΙΚΗ ΘΕΤΙΚΗ':
-    index_frontend(r'B\Fysikh', segment)
-elif subject == "ΜΑΘΗΜΑΤΙΚΑ ΘΕΤΙΚΗ":
-    index_frontend(r'B\Math_Kateuth', segment)
-elif subject == "ΑΛΓΕΒΡΑ":
-    index_frontend(r'B\Algebra', segment)
-elif subject == "ΓΛΩΣΣΑ":
-    index_frontend(r'B\Glwssa', segment)
-else:
-    print("Δεν υπάρχει το μάθημα: "+subject)
-
-if list == []:
-    print("Δεν βρέθηκαν αποτελέσματα.")
-else:
-    print(list)
-
-end = input('Press any key to close..')
+main()
