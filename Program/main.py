@@ -40,7 +40,7 @@ def initial_check():
     if not os.path.exists(r"B"):
         print("Required libraries were not found. Downloading..")
     # PDF (Θεματα) Version Check
-    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/PDFs/version.json"
+    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/version.json"
     print("Verifying with server..")
     try:
         session = requests.session()
@@ -61,9 +61,6 @@ def initial_check():
             print("PDFs up to date!")
     except requests.exceptions.RequestException as e:
         print(f"Failed to check for updates: {e}")
-
-# initial_check()
-download_pdf()
 
 def normalize_text(text):
     text = re.sub(r'\s+', ' ', text)  
@@ -89,7 +86,9 @@ def index_frontend(folder_path, word_to_find):
     for filename in os.listdir(folder_path):
         if filename.endswith('.pdf'):
             file_path = os.path.join(folder_path, filename)
-            index_in_pdf(file_path, filename, word_to_find) 
+            index_in_pdf(file_path, filename, word_to_find) \
+
+initial_check()
 
 subject = input('Επιλογή Μαθήματος (ΦΥΣΙΚΗ ΘΕΤΙΚΗ/ ΜΑΘΗΜΑΤΙΚΑ ΘΕΤΙΚΗ/ ΑΛΓΕΒΡΑ/ ΓΛΩΣΣΑ)')
 print("Επιλέχθηκε: "+subject)
