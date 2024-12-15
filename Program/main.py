@@ -3,45 +3,51 @@ import fitz
 import re
 import requests
 import json
-import urllib
+import shutil
+import zipfile
+from clint.textui import progress
 
 list = []
 
 
 def download_pdf():
-    drive_pdf_link = "https://drive.google.com/drive/folders/19HQd-G7Iat0jhmIIv9KSazv6mdHt_ZdW?usp=sharing"
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    pdfs_dir = os.path.join(current_dir, '..', '..')
-    if os.path.exists(f"{pdfs_dir}/PDFs"):
-        print("Deleting old libraries..")
-        os.rmdir(f"{pdfs_dir}/PDFs")
-        
-    output = os.path.join(pdfs_dir, 'PDFs')
+    drive_pdf_link = "https://drive.usercontent.google.com/download?id=1i9G7jwnOA66tgBqc54f-cRh7t4Yvmhqh&export=download&authuser=0&confirm=t&uuid=04e9c882-615b-4eb0-859e-34423d71a931&at=APvzH3qY6_v6jfnozoMeH-hNYr0e%3A1734253857478"
+    if os.path.exists(r"PDFs"):
+        shutil.rmtree(r"PDFs")
+    
+    output = os.path.join(r"PDFs")
     
     try:
-        response = requests.get(drive_pdf_link, stream=True)
+        print("Downloading new PDFs..")
+        response = requests.get(drive_pdf_link, stream=True, timeout=(10, 30))
         response.raise_for_status()
         with open(output, 'wb') as file:
-            for chunk in response.iter_content(chunk_size=8192):
+            total_length = int(response.headers.get('content-length'))
+            for chunk in progress.bar(response.iter_content(chunk_size=16384), expected_size=(total_length/16384) + 1):
                 file.write(chunk)
 
-        print("New library has finished downloading..")
+        print("Extracting PDFs.zip..")
+        with zipfile.ZipFile(r"PDFs", 'r') as zip_ref:
+            zip_ref.extractall()
+        os.remove(r"PDFs")
+                
     except requests.exceptions.RequestException as e:
         print(f"Failed to download libraries: {e}")
 
 
 def initial_check():
     # Ελέγχει αν τα θεματα υπαρχουν
-    if not os.path.exists(r"PDFs\B"):
+    if not os.path.exists(r"B"):
         print("Required libraries were not found. Downloading..")
     # PDF (Θεματα) Version Check
     git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/PDFs/version.json"
+    print("Verifying with server..")
     try:
-        response = requests.get(git_config_file, stream=True).json()
+        session = requests.session()
+        response = session.get(git_config_file, stream=True, timeout=(10, 30)).json()
         local_json = None
-        with open(r'PDF\version.json') as f:
+        with open(r'version.json') as f:
             local_json = json.load(f)
-            print(local_json)
         online_json = response
         print(local_json, online_json)
         if local_json != online_json:
@@ -56,7 +62,8 @@ def initial_check():
     except requests.exceptions.RequestException as e:
         print(f"Failed to check for updates: {e}")
 
-initial_check()
+# initial_check()
+download_pdf()
 
 def normalize_text(text):
     text = re.sub(r'\s+', ' ', text)  
@@ -89,13 +96,13 @@ print("Επιλέχθηκε: "+subject)
 segment = input('Επιλογή εκφώνησης')
 
 if subject == 'ΦΥΣΙΚΗ ΘΕΤΙΚΗ':
-    index_frontend(r'PDFs\B\Fysikh', segment)
+    index_frontend(r'B\Fysikh', segment)
 elif subject == "ΜΑΘΗΜΑΤΙΚΑ ΘΕΤΙΚΗ":
-    index_frontend(r'Mathimata\B\Math_Kateuth', segment)
+    index_frontend(r'B\Math_Kateuth', segment)
 elif subject == "ΑΛΓΕΒΡΑ":
-    index_frontend(r'Mathimata\B\Algebra', segment)
+    index_frontend(r'B\Algebra', segment)
 elif subject == "ΓΛΩΣΣΑ":
-    index_frontend(r'Mathimata\B\Glwssa', segment)
+    index_frontend(r'B\Glwssa', segment)
 else:
     print("Δεν υπάρχει το μάθημα: "+subject)
 
