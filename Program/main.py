@@ -66,7 +66,7 @@ def initial_check():
         print("Δεν υπάρχουν εγκατεστημένα θέματα σε αυτόν τον υπολογιστή.")
         download_pdf()
     # PDF (Θεματα) Version Check
-    git_config_file = "https://github.com/sharl16/Trapeza_Thematwn_Searcher/blob/main/PDFs/version.json"
+    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/PDFs/B/version.json"
     print("Έλεγχος για ενημερώσεις..")
     try:
         session = requests.session()
