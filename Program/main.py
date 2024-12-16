@@ -55,6 +55,8 @@ def download_pdf():
         
 def initial_check():
     # Ελέγχει αν τα θεματα υπαρχουν
+    if not os.path.exists(r"PDFs\B\ΜΑΘ_ΘΕΤ") and os.path.exists(r"PDFs"):
+        print("\033[33mΑυτή η έκδοση του προγράμματος είναι ξεπερασμένη! Κατέβασε την τελευταία απο εδώ: https://github.com/sharl16/Trapeza_Thematwn_Searcher/releases\033[0m")
     if not os.path.exists(r"PDFs"):
         print("Δεν υπάρχουν εγκατεστημένα θέματα σε αυτόν τον υπολογιστή.")
         download_pdf()
