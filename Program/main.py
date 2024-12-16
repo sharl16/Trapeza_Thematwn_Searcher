@@ -10,20 +10,13 @@ from clint.textui import progress
 results = []
 
 def main():
-    subject = input('Επιλογή μαθήματος: (ΦΥΣΙΚΗ ΘΕΤΙΚΗ/ ΜΑΘΗΜΑΤΙΚΑ ΘΕΤΙΚΗ/ ΑΛΓΕΒΡΑ/ ΓΛΩΣΣΑ)')
+    subject = input('Επιλογή μαθήματος: (ΑΛΓΕΒΡΑ / ΑΡΧΑΙΑ / ΒΙΟΛΟΓΙΑ / ΓΕΩΜΕΤΡΙΑ / ΓΛΩΣΣΑ / ΙΣΤΟΡΙΑ / ΜΑΘ_ΘΕΤ / ΦΥΣ_ΘΕΤ)')
     print("Επιλέχθηκε: "+subject)
     segment = input('Επιλογή εκφώνησης')
-
-    if subject == 'ΦΥΣΙΚΗ ΘΕΤΙΚΗ':
-        index_frontend(r'PDFs\B\Fysikh', segment)
-    elif subject == "ΜΑΘΗΜΑΤΙΚΑ ΘΕΤΙΚΗ":
-        index_frontend(r'PDFs\B\Math_Kateuth', segment)
-    elif subject == "ΑΛΓΕΒΡΑ":
-        index_frontend(r'PDFs\B\Algebra', segment)
-    elif subject == "ΓΛΩΣΣΑ":
-        index_frontend(r'PDFs\B\Glwssa', segment)
-    else:
-        print("Δεν υπάρχει το μάθημα: "+subject)
+    segment = str(segment)
+    
+    if subject:
+        index_frontend(rf'PDFs\B\{subject}', segment)
 
     if results == []:
         print("Δεν βρέθηκαν αποτελέσματα.")
@@ -66,7 +59,7 @@ def initial_check():
         print("Δεν υπάρχουν εγκατεστημένα θέματα σε αυτόν τον υπολογιστή.")
         download_pdf()
     # PDF (Θεματα) Version Check
-    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/refs/heads/main/PDFs/B/version.json"
+    git_config_file = "https://raw.githubusercontent.com/sharl16/Trapeza_Thematwn_Searcher/main/PDFs/B/version.json"
     print("Έλεγχος για ενημερώσεις..")
     try:
         session = requests.session()
